@@ -1,4 +1,6 @@
-﻿#include <iostream>
+﻿#include <SDL.h>
+#include <iostream>
+
 using namespace std;
 
 char board[3][3] = { {' ', ' ', ' '}, {' ', ' ', ' '}, {' ', ' ', ' '} };
