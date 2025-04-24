@@ -1,6 +1,6 @@
-^D:\TEST\MYPROJECT\BUILD\CMAKEFILES\02C30AB6A975B727392FDFAD09ADAB62\GENERATE.STAMP.RULE
+^D:\TEST\GAMEPROJECT\BUILD\CMAKEFILES\A2DE909B581298E2DE50CECEC8A41B9A\GENERATE.STAMP.RULE
 setlocal
-D:\WorkSpace\Cmake\bin\cmake.exe -SD:/Test/MyProject -BD:/Test/MyProject/build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file D:/Test/MyProject/build/MyProject.sln
+D:\WorkSpace\Cmake\bin\cmake.exe -SD:/Test/gameProject -BD:/Test/gameProject/build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file D:/Test/gameProject/build/gameProject.sln
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone

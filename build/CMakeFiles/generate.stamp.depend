@@ -1,9 +1,9 @@
 # CMake generation dependency list for this directory.
-D:/Test/MyProject/CMakeLists.txt
-D:/Test/MyProject/build/CMakeFiles/3.31.4/CMakeCCompiler.cmake
-D:/Test/MyProject/build/CMakeFiles/3.31.4/CMakeCXXCompiler.cmake
-D:/Test/MyProject/build/CMakeFiles/3.31.4/CMakeRCCompiler.cmake
-D:/Test/MyProject/build/CMakeFiles/3.31.4/CMakeSystem.cmake
+D:/Test/gameProject/CMakeLists.txt
+D:/Test/gameProject/build/CMakeFiles/3.31.4/CMakeCCompiler.cmake
+D:/Test/gameProject/build/CMakeFiles/3.31.4/CMakeCXXCompiler.cmake
+D:/Test/gameProject/build/CMakeFiles/3.31.4/CMakeRCCompiler.cmake
+D:/Test/gameProject/build/CMakeFiles/3.31.4/CMakeSystem.cmake
 D:/WorkSpace/Cmake/share/cmake-3.31/Modules/CMakeCCompiler.cmake.in
 D:/WorkSpace/Cmake/share/cmake-3.31/Modules/CMakeCCompilerABI.c
 D:/WorkSpace/Cmake/share/cmake-3.31/Modules/CMakeCInformation.cmake

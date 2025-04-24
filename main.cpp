@@ -1,79 +1,22 @@
 ﻿#include <SDL.h>
-#include <iostream>
 
-using namespace std;
+const int SCREEN_WIDTH = 300;
+const int SCREEN_HEIGHT = 300;
 
-char board[3][3] = { {' ', ' ', ' '}, {' ', ' ', ' '}, {' ', ' ', ' '} };
-char current_marker;
-int current_player;
+int main(int argc, char* argv[]) {
+    SDL_Init(SDL_INIT_VIDEO);
+    SDL_Window* window = SDL_CreateWindow("Tic Tac Toe", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                                          SCREEN_WIDTH, SCREEN_HEIGHT, 0);
+    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
-void drawBoard() {
-    system("clear");
-    cout << "\n";
-    for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 3; j++) {
-            cout << " " << board[i][j] << " ";
-            if (j < 2) cout << "|";
-        }
-        cout << "\n";
-        if (i < 2) cout << "---|---|---\n";
-    }
-    cout << "\n";
-}
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    SDL_RenderClear(renderer);
+    SDL_RenderPresent(renderer);
 
-bool placeMarker(int slot) {
-    int row = (slot - 1) / 3;
-    int col = (slot - 1) % 3;
-    if (board[row][col] != 'X' && board[row][col] != 'O') {
-        board[row][col] = current_marker;
-        return true;
-    }
-    return false;
-}
+    SDL_Delay(2000); // Dừng 2 giây để xem cửa sổ
 
-int checkWinner() {
-    for (int i = 0; i < 3; i++) {
-        if (board[i][0] == board[i][1] && board[i][1] == board[i][2] && board[i][0] != ' ') return current_player;
-        if (board[0][i] == board[1][i] && board[1][i] == board[2][i] && board[0][i] != ' ') return current_player;
-    }
-    if (board[0][0] == board[1][1] && board[1][1] == board[2][2] && board[0][0] != ' ') return current_player;
-    if (board[0][2] == board[1][1] && board[1][1] == board[2][0] && board[0][2] != ' ') return current_player;
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
     return 0;
 }
-
-void swapPlayerAndMarker() {
-    current_marker = (current_marker == 'X') ? 'O' : 'X';
-    current_player = (current_player == 1) ? 2 : 1;
-}
-
-void game() {
-    cout << "Chon nguoi choi bat đau (1 hoac 2): ";
-    cin >> current_player;
-    current_marker = (current_player == 1) ? 'X' : 'O';
-
-    int winner = 0;
-    for (int i = 0; i < 9 && winner == 0; i++) {
-        drawBoard();
-        cout << "Nguoi chơi " << current_player << " (" << current_marker << "), nhap vi tri (1-9): ";
-        int slot;
-        cin >> slot;
-
-        if (slot < 1 || slot > 9 || !placeMarker(slot)) {
-            cout << "Nuoc di khong hop le! Thu lai.\n";
-            i--;
-            continue;
-        }
-
-        winner = checkWinner();
-        if (winner == 0) swapPlayerAndMarker();
-    }
-
-    drawBoard();
-    if (winner) cout << "Nguoi choi " << winner << " thang!\n";
-    else cout << "Tro choi hoa!\n";
-}
-
-int main() {
-    game();
-    return 0;
-} 
