@@ -60,6 +60,7 @@ void drawBoard() {
     SDL_RenderPresent(renderer);
 }
 
+// Đánh dấu ô nếu còn trống
 bool placeMarker(int row, int col) {
     if (board[row][col] == ' ') {
         board[row][col] = current_marker;
@@ -68,15 +69,53 @@ bool placeMarker(int row, int col) {
     return false;
 }
 
+// Kiểm tra người thắng
+int checkWinner() {
+    for (int i = 0; i < 3; i++) {
+        // Hàng
+        if (board[i][0] != ' ' &&
+            board[i][0] == board[i][1] && board[i][1] == board[i][2])
+            return current_player;
+
+        // Cột
+        if (board[0][i] != ' ' &&
+            board[0][i] == board[1][i] && board[1][i] == board[2][i])
+            return current_player;
+    }
+
+    // Chéo
+    if (board[0][0] != ' ' &&
+        board[0][0] == board[1][1] && board[1][1] == board[2][2])
+        return current_player;
+
+    if (board[0][2] != ' ' &&
+        board[0][2] == board[1][1] && board[1][1] == board[2][0])
+        return current_player;
+
+    return 0;
+}
+
+// Xử lý sự kiện click chuột
 void handleMouseClick(int x, int y) {
     int row = y / CELL_SIZE;
     int col = x / CELL_SIZE;
 
-    if (row >= 0 && row < 3 && col >= 0 && col < 3 && placeMarker(row, col)) {
+    if (row < 0 || row > 2 || col < 0 || col > 2) return;
+
+    if (placeMarker(row, col)) {
+        int winner = checkWinner();
+        if (winner) {
+            std::cout << "Người chơi " << winner << " (" << current_marker << ") thắng!\n";
+            SDL_Delay(2000);
+            resetBoard();
+            return;
+        }
+
         current_marker = (current_marker == 'X') ? 'O' : 'X';
         current_player = (current_player == 1) ? 2 : 1;
     }
 }
+
 
 int main(int argc, char* argv[]) {
     SDL_Init(SDL_INIT_VIDEO);
