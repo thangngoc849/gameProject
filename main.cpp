@@ -1,8 +1,8 @@
 ﻿#include <SDL.h>
 #include <iostream>
 
-const int WINDOW_SIZE = 400;
-const int MAX_SIZE = 6;
+const int WINDOW_SIZE = 600;
+const int MAX_SIZE = 12;
 int boardSize = 3;
 int winLength = 3;
 char board[MAX_SIZE][MAX_SIZE];
@@ -14,6 +14,8 @@ SDL_Renderer* renderer = nullptr;
 SDL_Texture* start3x3Texture = nullptr;
 SDL_Texture* start4x4Texture = nullptr;
 SDL_Texture* start6x6Texture = nullptr;
+SDL_Texture* start9x9Texture = nullptr;
+SDL_Texture* start12x12Texture = nullptr;
 SDL_Texture* winner1Texture = nullptr;
 SDL_Texture* winner2Texture = nullptr;
 SDL_Texture* drawTexture = nullptr;
@@ -26,7 +28,7 @@ struct WinLine {
 SDL_Texture* loadTexture(const char* path) {
     SDL_Surface* surface = SDL_LoadBMP(path);
     if (!surface) {
-        std::cerr << "Không thể tải ảnh " << path << ": " << SDL_GetError() << '\n';
+        std::cerr << "Cannot load image " << path << ": " << SDL_GetError() << '\n';
         return nullptr;
     }
     SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
@@ -151,8 +153,7 @@ int checkWinner() {
                     if (board[i + winLength - 1 - k][j + k] != c) win = false;
                 if (win) {
                     winLine = {{true}, {j * cs + cs / 2, (i + winLength - 1) * cs + cs / 2},
-                                      {(j + winLength - 1) * cs + cs / 2,
-                                       i * cs + cs / 2}};
+                                      {(j + winLength - 1) * cs + cs / 2, i * cs + cs / 2}};
                     return current_player;
                 }
             }
@@ -170,19 +171,22 @@ bool placeMarker(int row, int col) {
 }
 
 void handleMouseClick(int x, int y, bool& inStartScreen, bool& inEndScreen, int& winner) {
-    if (inStartScreen) {
-        if (x >= 140 && x <= 260 && y >= 80 && y <= 120) {
-            boardSize = 3; winLength = 3;
-        } else if (x >= 140 && x <= 260 && y >= 140 && y <= 180) {
-            boardSize = 4; winLength = 3;
-        } else if (x >= 140 && x <= 260 && y >= 200 && y <= 240) {
-            boardSize = 6; winLength = 4;
-        } else return;
+    int xLeft = 240, xRight = 360;
 
-        SDL_SetWindowSize(window, WINDOW_SIZE, WINDOW_SIZE);
-        inStartScreen = false;
-        resetBoard();
-        return;
+    if (inStartScreen) {
+        if (x >= xLeft && x <= xRight) {
+            if (y >= 100 && y <= 150) { boardSize = 3; winLength = 3; }
+            else if (y >= 170 && y <= 220) { boardSize = 4; winLength = 3; }
+            else if (y >= 240 && y <= 290) { boardSize = 6; winLength = 4; }
+            else if (y >= 310 && y <= 360) { boardSize = 9; winLength = 5; }
+            else if (y >= 380 && y <= 430) { boardSize = 12; winLength = 5; }
+            else return;
+
+            SDL_SetWindowSize(window, WINDOW_SIZE, WINDOW_SIZE);
+            inStartScreen = false;
+            resetBoard();
+            return;
+        }
     }
 
     if (inEndScreen) {
@@ -203,14 +207,13 @@ void handleMouseClick(int x, int y, bool& inStartScreen, bool& inEndScreen, int&
             SDL_Delay(2000);
             inEndScreen = true;
         } else {
-            // Kiểm tra hòa
             bool full = true;
             for (int i = 0; i < boardSize && full; ++i)
                 for (int j = 0; j < boardSize && full; ++j)
                     if (board[i][j] == ' ') full = false;
 
             if (full) {
-                winner = 0; // hòa
+                winner = 0;
                 drawBoard();
                 SDL_Delay(2000);
                 inEndScreen = true;
@@ -226,9 +229,12 @@ void drawStartScreen() {
     SDL_SetRenderDrawColor(renderer, 180, 180, 180, 255);
     SDL_RenderClear(renderer);
 
-    if (start3x3Texture) SDL_RenderCopy(renderer, start3x3Texture, NULL, &(SDL_Rect{140, 80, 100, 40}));
-    if (start4x4Texture) SDL_RenderCopy(renderer, start4x4Texture, NULL, &(SDL_Rect{140, 140, 100, 40}));
-    if (start6x6Texture) SDL_RenderCopy(renderer, start6x6Texture, NULL, &(SDL_Rect{140, 200, 100, 40}));
+    int centerX = 240;
+    if (start3x3Texture) SDL_RenderCopy(renderer, start3x3Texture, NULL, &(SDL_Rect{centerX, 100, 120, 50}));
+    if (start4x4Texture) SDL_RenderCopy(renderer, start4x4Texture, NULL, &(SDL_Rect{centerX, 170, 120, 50}));
+    if (start6x6Texture) SDL_RenderCopy(renderer, start6x6Texture, NULL, &(SDL_Rect{centerX, 240, 120, 50}));
+    if (start9x9Texture) SDL_RenderCopy(renderer, start9x9Texture, NULL, &(SDL_Rect{centerX, 310, 120, 50}));
+    if (start12x12Texture) SDL_RenderCopy(renderer, start12x12Texture, NULL, &(SDL_Rect{centerX, 380, 120, 50}));
 
     SDL_RenderPresent(renderer);
 }
@@ -243,7 +249,7 @@ void drawEndScreen(int winner) {
     else texture = drawTexture;
 
     if (texture) {
-        SDL_Rect dst = {90, 180, 220, 40};
+        SDL_Rect dst = {0, 0, 600, 600};
         SDL_RenderCopy(renderer, texture, NULL, &dst);
     }
     SDL_RenderPresent(renderer);
@@ -251,13 +257,14 @@ void drawEndScreen(int winner) {
 
 int main(int argc, char* argv[]) {
     SDL_Init(SDL_INIT_VIDEO);
-    window = SDL_CreateWindow("Tic Tac Toe", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                              WINDOW_SIZE, WINDOW_SIZE, 0);
+    window = SDL_CreateWindow("Tic Tac Toe", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_SIZE, WINDOW_SIZE, 0);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
     start3x3Texture = loadTexture("start3x3.bmp");
     start4x4Texture = loadTexture("start4x4.bmp");
     start6x6Texture = loadTexture("start6x6.bmp");
+    start9x9Texture = loadTexture("start9x9.bmp");
+    start12x12Texture = loadTexture("start12x12.bmp");
     winner1Texture = loadTexture("winner1.bmp");
     winner2Texture = loadTexture("winner2.bmp");
     drawTexture = loadTexture("draw.bmp");
@@ -285,6 +292,8 @@ int main(int argc, char* argv[]) {
     SDL_DestroyTexture(start3x3Texture);
     SDL_DestroyTexture(start4x4Texture);
     SDL_DestroyTexture(start6x6Texture);
+    SDL_DestroyTexture(start9x9Texture);
+    SDL_DestroyTexture(start12x12Texture);
     SDL_DestroyTexture(winner1Texture);
     SDL_DestroyTexture(winner2Texture);
     SDL_DestroyTexture(drawTexture);
