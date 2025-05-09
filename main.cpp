@@ -9,8 +9,11 @@ char board[MAX_SIZE][MAX_SIZE];
 char current_marker = 'X';
 int current_player = 1;
 
+
 SDL_Window* window = nullptr;
 SDL_Renderer* renderer = nullptr;
+SDL_Texture* pvpTexture = nullptr;
+SDL_Texture* pvcTexture = nullptr;
 SDL_Texture* start3x3Texture = nullptr;
 SDL_Texture* start4x4Texture = nullptr;
 SDL_Texture* start6x6Texture = nullptr;
@@ -19,6 +22,10 @@ SDL_Texture* start12x12Texture = nullptr;
 SDL_Texture* winner1Texture = nullptr;
 SDL_Texture* winner2Texture = nullptr;
 SDL_Texture* drawTexture = nullptr;
+
+bool isPvC = false;
+bool playerTurn = true;
+
 
 struct WinLine {
     bool active = false;
@@ -63,8 +70,10 @@ void drawX(int row, int col) {
     int x = col * cellSize;
     int y = row * cellSize;
     SDL_SetRenderDrawColor(renderer, 200, 0, 0, 255);
-    SDL_RenderDrawLine(renderer, x + 10, y + 10, x + cellSize - 10, y + cellSize - 10);
-    SDL_RenderDrawLine(renderer, x + cellSize - 10, y + 10, x + 10, y + cellSize - 10);
+    for (int i = -2; i <= 2; ++i) { // Thêm vòng lặp để vẽ nhiều nét tạo độ dày
+        SDL_RenderDrawLine(renderer, x + 10, y + 10 + i, x + cellSize - 10, y + cellSize - 10 + i);
+        SDL_RenderDrawLine(renderer, x + cellSize - 10, y + 10 + i, x + 10, y + cellSize - 10 + i);
+    }
 }
 
 void drawO(int row, int col) {
@@ -77,11 +86,12 @@ void drawO(int row, int col) {
         for (int h = 0; h < radius * 2; ++h) {
             int dx = radius - w;
             int dy = radius - h;
-            if (dx * dx + dy * dy <= radius * radius &&
-                dx * dx + dy * dy >= (radius - 2) * (radius - 2))
+            int distSq = dx * dx + dy * dy;
+            if (distSq <= radius * radius && distSq >= (radius - 4) * (radius - 4)) // Tăng độ dày từ 2 lên 4
                 SDL_RenderDrawPoint(renderer, x + dx, y + dy);
         }
 }
+
 
 void drawBoard() {
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
@@ -93,15 +103,20 @@ void drawBoard() {
             else if (board[i][j] == 'O') drawO(i, j);
         }
 
-    if (winLine.active) {
-        SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
-        SDL_RenderDrawLine(renderer, winLine.start.x, winLine.start.y, winLine.end.x, winLine.end.y);
-    }
+        if (winLine.active) {
+            SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+            for (int i = -4; i <= 4; ++i) { // Tăng độ dày đường thẳng
+                SDL_RenderDrawLine(renderer,
+                    winLine.start.x, winLine.start.y + i,
+                    winLine.end.x, winLine.end.y + i);
+            }
+        }
+        
 
     SDL_RenderPresent(renderer);
 }
 
-int checkWinner() {
+int checkWinner(bool updateLine = true) {
     int cs = getCellSize();
     for (int i = 0; i < boardSize; ++i) {
         for (int j = 0; j <= boardSize - winLength; ++j) {
@@ -111,8 +126,9 @@ int checkWinner() {
                 for (int k = 1; k < winLength; ++k)
                     if (board[i][j + k] != c) win = false;
                 if (win) {
-                    winLine = {{true}, {j * cs + cs / 2, i * cs + cs / 2},
-                                      {(j + winLength - 1) * cs + cs / 2, i * cs + cs / 2}};
+                    if (updateLine)
+                        winLine = {{true}, {j * cs + cs / 2, i * cs + cs / 2},
+                                           {(j + winLength - 1) * cs + cs / 2, i * cs + cs / 2}};
                     return current_player;
                 }
             }
@@ -123,8 +139,9 @@ int checkWinner() {
                 for (int k = 1; k < winLength; ++k)
                     if (board[j + k][i] != c) win = false;
                 if (win) {
-                    winLine = {{true}, {i * cs + cs / 2, j * cs + cs / 2},
-                                      {i * cs + cs / 2, (j + winLength - 1) * cs + cs / 2}};
+                    if (updateLine)
+                        winLine = {{true}, {i * cs + cs / 2, j * cs + cs / 2},
+                                           {i * cs + cs / 2, (j + winLength - 1) * cs + cs / 2}};
                     return current_player;
                 }
             }
@@ -139,9 +156,10 @@ int checkWinner() {
                 for (int k = 1; k < winLength; ++k)
                     if (board[i + k][j + k] != c) win = false;
                 if (win) {
-                    winLine = {{true}, {j * cs + cs / 2, i * cs + cs / 2},
-                                      {(j + winLength - 1) * cs + cs / 2,
-                                       (i + winLength - 1) * cs + cs / 2}};
+                    if (updateLine)
+                        winLine = {{true}, {j * cs + cs / 2, i * cs + cs / 2},
+                                           {(j + winLength - 1) * cs + cs / 2,
+                                            (i + winLength - 1) * cs + cs / 2}};
                     return current_player;
                 }
             }
@@ -152,8 +170,9 @@ int checkWinner() {
                 for (int k = 1; k < winLength; ++k)
                     if (board[i + winLength - 1 - k][j + k] != c) win = false;
                 if (win) {
-                    winLine = {{true}, {j * cs + cs / 2, (i + winLength - 1) * cs + cs / 2},
-                                      {(j + winLength - 1) * cs + cs / 2, i * cs + cs / 2}};
+                    if (updateLine)
+                        winLine = {{true}, {j * cs + cs / 2, (i + winLength - 1) * cs + cs / 2},
+                                           {(j + winLength - 1) * cs + cs / 2, i * cs + cs / 2}};
                     return current_player;
                 }
             }
@@ -162,6 +181,8 @@ int checkWinner() {
     return 0;
 }
 
+
+
 bool placeMarker(int row, int col) {
     if (board[row][col] == ' ') {
         board[row][col] = current_marker;
@@ -169,6 +190,72 @@ bool placeMarker(int row, int col) {
     }
     return false;
 }
+
+bool findWinningMove(char marker, int& row, int& col) {
+    for (int i = 0; i < boardSize; ++i) {
+        for (int j = 0; j < boardSize; ++j) {
+            if (board[i][j] == ' ') {
+                board[i][j] = marker;
+                int result = checkWinner(false); // Không cập nhật winLine ở đây
+                board[i][j] = ' '; // undo
+                if (result != 0) {
+                    row = i;
+                    col = j;
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+
+void makeAIMove(int& winner, bool& inEndScreen) {
+    int row = -1, col = -1;
+
+    // 1. AI thắng nếu có thể
+    if (findWinningMove(current_marker, row, col)) {
+        board[row][col] = current_marker;
+    }
+    // 2. Nếu không, chặn người chơi
+    else if (findWinningMove('X', row, col)) {
+        board[row][col] = current_marker;
+    }
+    // 3. Nếu không, chọn ô đầu tiên trống
+    else {
+        for (int i = 0; i < boardSize && row == -1; ++i)
+            for (int j = 0; j < boardSize && row == -1; ++j)
+                if (board[i][j] == ' ') {
+                    row = i; col = j;
+                    board[row][col] = current_marker;
+                }
+    }
+
+    // Kiểm tra thắng hoặc hòa
+    winner = checkWinner();
+    if (winner) {
+        drawBoard();
+        SDL_Delay(2000);
+        inEndScreen = true;
+    } else {
+        bool full = true;
+        for (int i = 0; i < boardSize && full; ++i)
+            for (int j = 0; j < boardSize && full; ++j)
+                if (board[i][j] == ' ') full = false;
+
+        if (full) {
+            winner = 0;
+            drawBoard();
+            SDL_Delay(2000);
+            inEndScreen = true;
+        } else {
+            current_marker = (current_marker == 'X') ? 'O' : 'X';
+            current_player = (current_player == 1) ? 2 : 1;
+            playerTurn = true;
+        }
+    }
+}
+
 
 void handleMouseClick(int x, int y, bool& inStartScreen, bool& inEndScreen, int& winner) {
     int xLeft = 240, xRight = 360;
@@ -181,19 +268,33 @@ void handleMouseClick(int x, int y, bool& inStartScreen, bool& inEndScreen, int&
             else if (y >= 310 && y <= 360) { boardSize = 9; winLength = 5; }
             else if (y >= 380 && y <= 430) { boardSize = 12; winLength = 5; }
             else return;
+        }
 
+        // Chọn chế độ chơi PvP / PvC
+        if (x >= 50 && x <= 200) {
+            if (y >= 100 && y <= 150) { isPvC = false; } // PvP
+            else if (y >= 170 && y <= 220) { isPvC = true; }  // PvC
+            else return;
+
+            // Khởi tạo lại cửa sổ khi thay đổi chế độ chơi
             SDL_SetWindowSize(window, WINDOW_SIZE, WINDOW_SIZE);
             inStartScreen = false;
             resetBoard();
+            playerTurn = true;
             return;
         }
     }
 
     if (inEndScreen) {
+        // Reset lại trạng thái khi quay lại màn hình chọn chế độ
         inEndScreen = false;
         inStartScreen = true;
+        resetBoard(); // Reset lại bảng chơi khi trở lại Start Screen
+        playerTurn = true; // Khởi tạo lại lượt chơi cho người chơi 1
         return;
     }
+
+    if (isPvC && !playerTurn) return;
 
     int cs = getCellSize();
     int row = y / cs;
@@ -204,7 +305,7 @@ void handleMouseClick(int x, int y, bool& inStartScreen, bool& inEndScreen, int&
         winner = checkWinner();
         if (winner) {
             drawBoard();
-            SDL_Delay(2000);
+            SDL_Delay(2000); // Hiển thị ván kết thúc trong 2 giây
             inEndScreen = true;
         } else {
             bool full = true;
@@ -220,22 +321,30 @@ void handleMouseClick(int x, int y, bool& inStartScreen, bool& inEndScreen, int&
             } else {
                 current_marker = (current_marker == 'X') ? 'O' : 'X';
                 current_player = (current_player == 1) ? 2 : 1;
+
+                if (isPvC) playerTurn = false;
             }
         }
     }
 }
+
 
 void drawStartScreen() {
     SDL_SetRenderDrawColor(renderer, 180, 180, 180, 255);
     SDL_RenderClear(renderer);
 
     int centerX = 240;
+    
+    if (pvpTexture) SDL_RenderCopy(renderer, pvpTexture, NULL, &(SDL_Rect{50, 100, 120, 50}));
+    if (pvcTexture) SDL_RenderCopy(renderer, pvcTexture, NULL, &(SDL_Rect{50, 170, 120, 50}));
+
     if (start3x3Texture) SDL_RenderCopy(renderer, start3x3Texture, NULL, &(SDL_Rect{centerX, 100, 120, 50}));
     if (start4x4Texture) SDL_RenderCopy(renderer, start4x4Texture, NULL, &(SDL_Rect{centerX, 170, 120, 50}));
     if (start6x6Texture) SDL_RenderCopy(renderer, start6x6Texture, NULL, &(SDL_Rect{centerX, 240, 120, 50}));
     if (start9x9Texture) SDL_RenderCopy(renderer, start9x9Texture, NULL, &(SDL_Rect{centerX, 310, 120, 50}));
     if (start12x12Texture) SDL_RenderCopy(renderer, start12x12Texture, NULL, &(SDL_Rect{centerX, 380, 120, 50}));
 
+    
     SDL_RenderPresent(renderer);
 }
 
@@ -260,6 +369,10 @@ int main(int argc, char* argv[]) {
     window = SDL_CreateWindow("Tic Tac Toe", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_SIZE, WINDOW_SIZE, 0);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
+
+    pvpTexture = loadTexture("pvp.bmp");
+    pvcTexture = loadTexture("pvc.bmp");
+
     start3x3Texture = loadTexture("start3x3.bmp");
     start4x4Texture = loadTexture("start4x4.bmp");
     start6x6Texture = loadTexture("start6x6.bmp");
@@ -268,6 +381,9 @@ int main(int argc, char* argv[]) {
     winner1Texture = loadTexture("winner1.bmp");
     winner2Texture = loadTexture("winner2.bmp");
     drawTexture = loadTexture("draw.bmp");
+    
+    
+    
 
     bool running = true;
     bool inStartScreen = true;
@@ -278,17 +394,29 @@ int main(int argc, char* argv[]) {
     resetBoard();
 
     while (running) {
-        if (inStartScreen) drawStartScreen();
-        else if (inEndScreen) drawEndScreen(winner);
-        else drawBoard();
-
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) running = false;
-            else if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT)
+            else if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
                 handleMouseClick(event.button.x, event.button.y, inStartScreen, inEndScreen, winner);
+            }
+        }
+
+        if (inStartScreen) {
+            drawStartScreen();
+        } else if (inEndScreen) {
+            drawEndScreen(winner);
+        } else {
+            if (isPvC && !playerTurn) {
+                SDL_Delay(300); // Thêm delay để giả lập "suy nghĩ"
+                makeAIMove(winner, inEndScreen);
+            }
+            drawBoard();
         }
     }
 
+    // Giải phóng tài nguyên
+    SDL_DestroyTexture(pvpTexture);
+    SDL_DestroyTexture(pvcTexture);
     SDL_DestroyTexture(start3x3Texture);
     SDL_DestroyTexture(start4x4Texture);
     SDL_DestroyTexture(start6x6Texture);
@@ -297,8 +425,10 @@ int main(int argc, char* argv[]) {
     SDL_DestroyTexture(winner1Texture);
     SDL_DestroyTexture(winner2Texture);
     SDL_DestroyTexture(drawTexture);
+
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
+
     return 0;
 }
