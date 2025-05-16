@@ -12,8 +12,8 @@ char board[MAX_SIZE][MAX_SIZE];
 char current_marker = 'X';
 int current_player = 1;
 
-SDL_Texture* backgroundTexture = nullptr;  // Texture cho ảnh nền
-SDL_Texture* mapSelectBackgroundTexture = nullptr;  // Texture cho ảnh nền màn hình chọn bản đồ
+SDL_Texture* backgroundTexture = nullptr;  
+SDL_Texture* mapSelectBackgroundTexture = nullptr;  
 
 
 
@@ -81,7 +81,7 @@ void drawX(int row, int col) {
     int x = col * cellSize;
     int y = row * cellSize;
     SDL_SetRenderDrawColor(renderer, 200, 0, 0, 255);
-    for (int i = -2; i <= 2; ++i) { // Thêm vòng lặp để vẽ nhiều nét tạo độ dày
+    for (int i = -2; i <= 2; ++i) { 
         SDL_RenderDrawLine(renderer, x + 10, y + 10 + i, x + cellSize - 10, y + cellSize - 10 + i);
         SDL_RenderDrawLine(renderer, x + cellSize - 10, y + 10 + i, x + 10, y + cellSize - 10 + i);
     }
@@ -98,7 +98,7 @@ void drawO(int row, int col) {
             int dx = radius - w;
             int dy = radius - h;
             int distSq = dx * dx + dy * dy;
-            if (distSq <= radius * radius && distSq >= (radius - 4) * (radius - 4)) // Tăng độ dày từ 2 lên 4
+            if (distSq <= radius * radius && distSq >= (radius - 4) * (radius - 4)) 
                 SDL_RenderDrawPoint(renderer, x + dx, y + dy);
         }
 }
@@ -116,7 +116,7 @@ void drawBoard() {
 
         if (winLine.active) {
             SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
-            for (int i = -4; i <= 4; ++i) { // Tăng độ dày đường thẳng
+            for (int i = -4; i <= 4; ++i) {
                 SDL_RenderDrawLine(renderer,
                     winLine.start.x, winLine.start.y + i,
                     winLine.end.x, winLine.end.y + i);
@@ -207,8 +207,8 @@ bool findWinningMove(char marker, int& row, int& col) {
         for (int j = 0; j < boardSize; ++j) {
             if (board[i][j] == ' ') {
                 board[i][j] = marker;
-                int result = checkWinner(false); // Không cập nhật winLine ở đây
-                board[i][j] = ' '; // undo
+                int result = checkWinner(false); 
+                board[i][j] = ' '; 
                 if (result != 0) {
                     row = i;
                     col = j;
@@ -222,13 +222,13 @@ bool findWinningMove(char marker, int& row, int& col) {
 
 bool detectThreat(char marker, int& blockRow, int& blockCol) {
     const int directions[4][2] = {
-        {0, 1},  // Ngang
-        {1, 0},  // Dọc
-        {1, 1},  // Chéo xuôi
-        {1, -1}  // Chéo ngược
+        {0, 1},  
+        {1, 0},  
+        {1, 1},  
+        {1, -1}  
     };
 
-    int threatThreshold = winLength - 3; // Điều chỉnh ở đây: 1 là chặn trước 1 bước, 2 là chặn trước 2 bước, v.v.
+    int threatThreshold = winLength - 3; 
 
     for (int i = 0; i < boardSize; ++i) {
         for (int j = 0; j < boardSize; ++j) {
@@ -255,7 +255,7 @@ bool detectThreat(char marker, int& blockRow, int& blockCol) {
                     } else break;
                 }
 
-                // Nếu chuỗi chứa nhiều hơn threatThreshold ký tự của đối thủ và phần còn lại là ô trống
+                
                 if (count >= threatThreshold && (count + emptyCount == winLength)) {
                     blockRow = lastEmptyRow;
                     blockCol = lastEmptyCol;
@@ -274,18 +274,18 @@ bool detectThreat(char marker, int& blockRow, int& blockCol) {
 void makeAIMove(int& winner, bool& inEndScreen) {
     int row = -1, col = -1;
 
-    // 1. Nếu AI có thể thắng thì đánh thắng
+    
     if (findWinningMove(current_marker, row, col)) {
         board[row][col] = current_marker;
     }
-    // 2. Nếu không thì chặn người chơi nếu họ sắp thắng
+    
     else if (findWinningMove('X', row, col)) {
         board[row][col] = current_marker;
     }
-    else if (detectThreat('X', row, col)) { // NEW: chặn người chơi khi họ còn 2 nước
+    else if (detectThreat('X', row, col)) { 
     board[row][col] = current_marker;
     }
-    // 3. Nếu không thì chọn ngẫu nhiên một ô gần các ô 'X'
+    
     else {
         std::vector<std::pair<int, int>> possibleMoves;
 
@@ -312,7 +312,7 @@ void makeAIMove(int& winner, bool& inEndScreen) {
             col = possibleMoves[index].second;
             board[row][col] = current_marker;
         } else {
-            // 4. Nếu không có ô gần nào, chọn ô trống đầu tiên
+            
             for (int i = 0; i < boardSize && row == -1; ++i) {
                 for (int j = 0; j < boardSize && col == -1; ++j) {
                     if (board[i][j] == ' ') {
@@ -325,7 +325,7 @@ void makeAIMove(int& winner, bool& inEndScreen) {
         }
     }
 
-    // Kiểm tra thắng hoặc hòa
+    
     winner = checkWinner();
     if (winner) {
         drawBoard();
@@ -356,15 +356,15 @@ void handleMouseClick(int x, int y, bool& inStartScreen, bool& inMapSelectionScr
     int xLeft = 240, xRight = 360;
 
     if (inStartScreen) {
-        // Chọn chế độ PvP / PvC
+        
         if (x >= xLeft && x <= xRight) {
             if (y >= 100 && y <= 150) { 
-                isPvC = false; // PvP
+                isPvC = false; 
             } else if (y >= 170 && y <= 220) { 
-                isPvC = true;  // PvC
+                isPvC = true;  
             } else return;
 
-            // Ngay lập tức chuyển sang màn hình chọn kích thước bảng
+            
             inStartScreen = false;
             inMapSelectionScreen = true;
             return;
@@ -372,7 +372,7 @@ void handleMouseClick(int x, int y, bool& inStartScreen, bool& inMapSelectionScr
     }
 
     if (inMapSelectionScreen) {
-        // Chọn kích thước bảng
+        
         if (x >= xLeft && x <= xRight) {
             if (y >= 100 && y <= 150) { boardSize = 3; winLength = 3; }
             else if (y >= 170 && y <= 220) { boardSize = 4; winLength = 3; }
@@ -381,7 +381,7 @@ void handleMouseClick(int x, int y, bool& inStartScreen, bool& inMapSelectionScr
             else if (y >= 380 && y <= 430) { boardSize = 12; winLength = 5; }
             else return;
 
-            // Quay lại màn hình chơi
+            
             inMapSelectionScreen = false;
             resetBoard();
             playerTurn = true;
@@ -390,16 +390,16 @@ void handleMouseClick(int x, int y, bool& inStartScreen, bool& inMapSelectionScr
     }
 
     if (inEndScreen) {
-        // Quay lại màn hình chọn chế độ
+        
         inEndScreen = false;
         inStartScreen = true;
-        resetBoard(); // Reset lại bảng chơi khi trở lại Start Screen
-        playerTurn = true; // Khởi tạo lại lượt chơi cho người chơi 1
+        resetBoard(); 
+        playerTurn = true; 
         return;
     }
 
-    // Xử lý click khi đang chơi
-    if (isPvC && !playerTurn) return; // Nếu chế độ PvC và đến lượt AI, không làm gì
+    
+    if (isPvC && !playerTurn) return; 
 
     int cs = getCellSize();
     int row = y / cs;
@@ -410,7 +410,7 @@ void handleMouseClick(int x, int y, bool& inStartScreen, bool& inMapSelectionScr
         winner = checkWinner();
         if (winner) {
             drawBoard();
-            SDL_Delay(2000); // Hiển thị ván kết thúc trong 2 giây
+            SDL_Delay(2000); 
             inEndScreen = true;
         } else {
             bool full = true;
@@ -437,15 +437,14 @@ void handleMouseClick(int x, int y, bool& inStartScreen, bool& inMapSelectionScr
 
 
 void drawStartScreen() {
-    // Vẽ ảnh nền
+    
     if (backgroundTexture) {
-        SDL_Rect dstRect = { 0, 0, WINDOW_SIZE, WINDOW_SIZE };  // Đặt vị trí và kích thước của ảnh nền
+        SDL_Rect dstRect = { 0, 0, WINDOW_SIZE, WINDOW_SIZE };  
         SDL_RenderCopy(renderer, backgroundTexture, NULL, &dstRect);
     }
 
     int centerX = 240;
     
-    // Vẽ các nút chọn chế độ
     if (pvpTexture) SDL_RenderCopy(renderer, pvpTexture, NULL, &(SDL_Rect{240, 100, 120, 50}));
     if (pvcTexture) SDL_RenderCopy(renderer, pvcTexture, NULL, &(SDL_Rect{240, 170, 120, 50}));
 
@@ -454,15 +453,14 @@ void drawStartScreen() {
 
 
 void drawMapSelectionScreen(){
-    // Vẽ ảnh nền cho màn hình chọn bản đồ
+    
     if (mapSelectBackgroundTexture) {
-        SDL_Rect dstRect = { 0, 0, WINDOW_SIZE, WINDOW_SIZE };  // Đặt vị trí và kích thước của ảnh nền
+        SDL_Rect dstRect = { 0, 0, WINDOW_SIZE, WINDOW_SIZE };  
         SDL_RenderCopy(renderer, mapSelectBackgroundTexture, NULL, &dstRect);
     }
 
     int centerX = 240;
     
-    // Vẽ các nút chọn kích thước bảng
     if (start3x3Texture) SDL_RenderCopy(renderer, start3x3Texture, NULL, &(SDL_Rect{centerX, 100, 120, 50}));
     if (start4x4Texture) SDL_RenderCopy(renderer, start4x4Texture, NULL, &(SDL_Rect{centerX, 170, 120, 50}));
     if (start6x6Texture) SDL_RenderCopy(renderer, start6x6Texture, NULL, &(SDL_Rect{centerX, 240, 120, 50}));
@@ -480,9 +478,9 @@ void drawEndScreen(int winner) {
     SDL_Texture* texture = nullptr;
 
     if (isPvC) {
-        if (winner == 1) texture = pvcWinTexture;      // Người chơi thắng AI
-        else if (winner == 2) texture = pvcLoseTexture; // AI thắng người chơi
-        else texture = pvcDrawTexture;                 // Hòa
+        if (winner == 1) texture = pvcWinTexture;      
+        else if (winner == 2) texture = pvcLoseTexture; 
+        else texture = pvcDrawTexture;                
     } else {
         if (winner == 1) texture = winner1Texture;
         else if (winner == 2) texture = winner2Texture;
@@ -503,11 +501,9 @@ int main(int argc, char* argv[]) {
     window = SDL_CreateWindow("Tic Tac Toe", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_SIZE, WINDOW_SIZE, 0);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
-    // Load textures
 
-    backgroundTexture = loadTexture("background.bmp");  // Thay "background.bmp" bằng tên ảnh của bạn
-    mapSelectBackgroundTexture = loadTexture("map_select_background.bmp");  // Thay "map_select_background.bmp" bằng tên ảnh của bạn
-
+    backgroundTexture = loadTexture("background.bmp");  
+    mapSelectBackgroundTexture = loadTexture("map_select_background.bmp"); 
 
     pvpTexture = loadTexture("pvp.bmp");
     pvcTexture = loadTexture("pvc.bmp");
@@ -526,7 +522,7 @@ int main(int argc, char* argv[]) {
 
     bool running = true;
     bool inStartScreen = true;
-    bool inMapSelectionScreen = false; // Màn hình chọn kích thước bảng
+    bool inMapSelectionScreen = false; 
     bool inEndScreen = false;
     int winner = 0;
 
@@ -549,14 +545,12 @@ int main(int argc, char* argv[]) {
             drawEndScreen(winner);
         } else {
             if (isPvC && !playerTurn) {
-                SDL_Delay(300); // Thêm delay để giả lập "suy nghĩ"
+                SDL_Delay(300); 
                 makeAIMove(winner, inEndScreen);
             }
             drawBoard();
         }
     }
-
-    // Giải phóng tài nguyên
 
     SDL_DestroyTexture(backgroundTexture);
     SDL_DestroyTexture(mapSelectBackgroundTexture);
