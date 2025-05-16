@@ -569,7 +569,6 @@ int main(int argc, char* argv[]) {
     SDL_DestroyTexture(pvcLoseTexture);
     SDL_DestroyTexture(pvcDrawTexture);
 
-
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
