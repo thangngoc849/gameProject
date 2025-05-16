@@ -15,8 +15,6 @@ int current_player = 1;
 SDL_Texture* backgroundTexture = nullptr;  
 SDL_Texture* mapSelectBackgroundTexture = nullptr;  
 
-
-
 SDL_Window* window = nullptr;
 SDL_Renderer* renderer = nullptr;
 SDL_Texture* pvpTexture = nullptr;
